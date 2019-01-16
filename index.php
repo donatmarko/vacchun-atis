@@ -7,16 +7,23 @@
  * @license    https://www.gnu.org/licenses/gpl.txt  GNU General Public License v3
  */
 
-$raw_metar = "LHBP 161930Z 35014G25KT 320V020 9000 FEW008 SCT012CB OVC036 01/M01 Q1013 NOSIG";
-$rwy_arrival = "13R";
-$rwy_depart = "13L,13R";
-$app_type = "ILS";
-$atis_letter = "Y";
-// $raw_metar   = isset($_GET["metar"]) ? $_GET["metar"] : null;
-// $rwy_arrival = isset($_GET["arr"])   ? $_GET["arr"]   : null;
-// $rwy_depart  = isset($_GET["dep"])   ? $_GET["dep"]   : null;
-// $app_type    = isset($_GET["app"])   ? $_GET["app"]   : null;
-// $atis_letter = isset($_GET["info"])  ? $_GET["info"]  : null;
+if (isset($_GET["tlcond"]))
+{
+	$raw_metar   = isset($_GET["metar"]) ? $_GET["metar"] : null;
+	$rwy_arrival = isset($_GET["arr"])   ? $_GET["arr"]   : null;
+	$rwy_depart  = isset($_GET["dep"])   ? $_GET["dep"]   : null;
+	$app_type    = isset($_GET["app"])   ? $_GET["app"]   : null;
+	$atis_letter = isset($_GET["info"])  ? $_GET["info"]  : null;
+}
+else
+{
+	$rwy_arrival = "13R";
+	$rwy_depart = "13L,13R";
+	$app_type = "ILS";
+	$atis_letter = "Y";
+}
+$raw_metar = "LHBP 152300Z 26020KT 9999 +RA BR SCT032 BKN050 04/M01 Q1012";
+
 
 require_once 'vendor/autoload.php';
 require_once 'functions.php';
@@ -32,7 +39,7 @@ if (!$d->isValid())
 }
 
 $a[] = $d->getIcao();
-$a[] = "information";
+$a[] = "info";
 $a[] = $atis_letter;
 
 $a[] = "Observation at";
@@ -56,17 +63,49 @@ $a   = array_merge($a, getSurfaceWinds($d->getSurfaceWind()));
 // Visibility
 $a   = array_merge($a, getVisibility($d));
 
+// Runway Visual Range
+$a   = array_merge($a, getRVR($d->getRunwaysVisualRange()));
+
+// Weather phenomenas
+$a   = array_merge($a, getWeather($d->getPresentWeather()));
+
+// Cloud base
+$a   = array_merge($a, getClouds($d->getClouds()));
+
 // Temperature
 $a[] = "Temperature";
 $a   = array_merge($a, getTemperature($d->getAirTemperature()->getValue()));
 
 // Dew point
-$a[] = "Dew point";
+$a[] = "Dewpoint";
 $a   = array_merge($a, getTemperature($d->getDewPointTemperature()->getValue()));
 
 // QNH
 $a[] = "QNH";
-$a[] = $d->getPressure()->getValue();
+$a[] = getQNH($d->getPressure()->getValue());
+
+$a[] = "On first contact notify receipt of";
+$a[] = $atis_letter;
 
 
-print_r($a);
+
+
+
+
+// Condition to test it in ES
+if (isset($_GET["tlcond"]))
+{
+	foreach ($a as $s)
+	{
+		if (is_numeric($s) || strpos($s, "{") > -1)
+		{
+			print $s;
+		}
+		elseif (strlen($s) > 0)
+		{
+			print "[". $s . "]";
+		}
+	}
+}
+else
+	print_r($a);

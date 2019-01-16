@@ -52,15 +52,15 @@ function getSurfaceWinds($sw)
 	}
 	else
 	{
-		$a[] = $sw->getMeanDirection()->getValue();
+		$a[] = sprintf("%03d", $sw->getMeanDirection()->getValue());
 		$a[] = "degrees";
 
 		if ($var = $sw->getDirectionVariations())
 		{
 			$a[] = "variable between";
-			$a[] = $var[0]->getValue();
+			$a[] = sprintf("%03d", $var[0]->getValue());
 			$a[] = "and";
-			$a[] = $var[count($var)-1]->getValue();
+			$a[] = sprintf("%03d", $var[count($var)-1]->getValue());
 			$a[] = "degrees";
 		}
 
@@ -99,27 +99,36 @@ function getVisibility($d)
 		{
 			$a[] = "10 kms or more";
 		}
+	}
 
-		if ($clouds = $d->getClouds())
+	return $a;
+}
+
+function getClouds($clouds)
+{
+	$a = array();
+
+	if ($clouds)
+	{
+		foreach ($clouds as $cloud)
 		{
-			foreach ($clouds as $cloud)
+			if ($cloud->getAmount() == "VV")
 			{
-				$a[] = $cloud->getAmount();
-				$a[] = "at";
+				$a[] = "Vertical visibility";
 				$a[] = "{" . $cloud->getBaseHeight()->getValue() . "}";
 				$a[] = "feet";
-
-				if ($type = $cloud->getType())
-				{
-					$a[] = $type;
-				}
+			}
+			else
+			{
+				$a[] = $cloud->getAmount() . ($cloud->getType() ? " " . $cloud->getType() : "");
+				$a[] = "{" . $cloud->getBaseHeight()->getValue() . "}";
+				$a[] = "feet";	
 			}
 		}
-		else
-		{
-			$a[] = "NSC";
-		}
-
+	}
+	else
+	{
+		$a[] = "NSC";
 	}
 
 	return $a;
@@ -132,7 +141,62 @@ function getTemperature($temp)
 	if ($temp < 0)
 		$a[] = "minus";
 
-	$a[] = abs($temp);
+	$a[] = sprintf("%02d", abs($temp));
+
+	return $a;
+}
+
+function getQNH($qnh)
+{
+	return sprintf("%04d", $qnh);
+}
+
+function getRVR($rvrs)
+{
+	$a = array();
+
+	if ($rvrs)
+	{
+		$a[] = "RVR";
+		foreach ($rvrs as $rvr)
+		{
+			$a[] = "runway";
+			$a[] = $rvr->getRunway();
+			$a[] = $rvr->getVisualRange()->getValue();
+			$a[] = "meters";
+		}
+	}
+
+	return $a;
+}
+
+function getWeather($weathers)
+{
+	$a = array();
+
+	for ($i = 0; $i < count($weathers); $i++)
+	{
+		if (count($weathers) > 1 && $i == count($weathers) - 1)
+			$a[] = "and";
+
+		$weather = $weathers[$i];
+		$intensity = $weather->getIntensityProximity();
+		
+		if ($intensity == "+")
+			$a[] = "heavy";
+		if ($intensity == "-")
+			$a[] = "light";
+
+		$a[] = $weather->getCharacteristics();
+
+		foreach ($weather->getTypes() as $type)
+		{
+			$a[] = $type;
+		}
+
+		if ($intensity == "VC")
+			$a[] = "in vicinity";
+	}
 
 	return $a;
 }
