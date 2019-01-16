@@ -1,0 +1,17 @@
+{
+	"name": "vACCHUN-ATIS generator",
+	"description": "A PHP script to generate up-to-date ATIS mainly for LHBP",
+	"homepage": "http://vacchun.hu",
+	"version": "0.1.0",
+	"authors": [{
+		"name": "Donat Marko",
+		"email": "sdf@donatus.hu",
+		"homepage": "https://donatus.hu",
+		"role": "maintainer"
+	}],
+	"keywords": ["vatsim", "vacc", "vacchun", "atc", "atis"],
+	"license": "GPL-v3",
+    "require": {
+        "safran-cassiopee/php-metar-decoder": "dev-master"
+    }
+}
